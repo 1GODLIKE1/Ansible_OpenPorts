@@ -1,0 +1,46 @@
+---
+- name: "Resolution 443 and 80 ports"
+  hosts: "all"
+  become: true
+  become_method: sudo
+  
+  vars: 
+    
+  tasks:
+  - name: "Install Firewalld"
+    apt: 
+      name: firewalld
+      state: latest
+
+  - name: "Start Firewalld"
+    service: 
+      name: firewalld
+      state: start
+      enabled: yes
+       
+  - name: "Firewall configurations"
+    firewalld:
+      zone: public
+      service: "{{ item }}"
+      permanent: yes
+      state: enabled
+    notify: 
+    - Restart Firewalld
+    loop:
+      - https
+      - http  
+  
+  - name: "Open TCP port 22"
+    firewalld:
+       zone: public
+       port: 22/tcp
+       state: enabled
+       permanent: yes
+    notify: 
+    - Restart Firewalld
+
+  handlers:
+    - name: "Restart Firewalld"
+      service:
+         name: firewalld
+         state: restarted
